@@ -365,12 +365,12 @@ write.csv(out, 'data/DA.files/DA_ESN_7v8.csv', row.names = FALSE)
 d <- list.files(path="data/DA.files", full.names = TRUE) %>% 
   lapply(read_csv) %>% 
   bind_rows 
-df <- read.csv('data/DiffAbund_Weekly.csv')
 d$enrich_group = as.factor(d$enrich_group)
+write.csv(d, 'data/DA.files/DA_all.csv')
 
 ```
 
-
+## diff abund figure by week
 ```{r,  fig 1}
 x = tapply(d$ef_logFC, d$feature, function(x) max(x))
 x = sort(-x, TRUE)
@@ -397,6 +397,127 @@ p<-ggplot() +
         axis.title.x = element_blank(),
         strip.background = element_blank());p 
 p<- tag_facet(p, size = 5);p #A=CK, B=ESN, C=HU, D=LU
-ggsave(plot=p, filename = 'figures/DiffAbundByWeek.png',width = 10,height = 8)
+ggsave(plot=p, filename = 'figures/DA-fert-byweek.png',width = 10,height = 8)
+```
+
+## diff abund early late volcano plot
+```{r}
+
+colnames(tax_table(P.count)) <- c('Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species')
+
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.count, 
+  group="Stage",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=1)
+
+df<-data.frame(microbiomeMarker::marker_table(out.glom))
+write.csv(df,"data/DA.files/DA_early-late.csv")
+
+
+df$sig <- ifelse(df$padj>0.05, "NS",
+                                       ifelse(df$padj==0.05, "NS",
+                                              ifelse(df$padj<0.05, "sig",NA)))
+df$sig.stage <- paste(df$enrich_group,df$sig)
+
+
+df$colors <- ifelse(df$sig=="NS", "NS",
+                        ifelse(df$sig.stage=='Early sig',"Early",
+                               ifelse(df$sig.stage=='Late sig','Late',NA)))
+df<- arrange(df, -log(padj))
+
+p<-ggplot(data=df)+
+  geom_point(alpha=0.85,mapping= aes(
+    fill=colors, x=ef_logFC,y=-log(padj)),
+    size=5,color='black',pch=21) +
+  scale_fill_manual(values = c('cornflowerblue','firebrick4','gray50'))+
+  theme_classic()+
+  labs(y=expression("-log"["10"] ~ "p" ["adj"]), 
+       x=expression("log"["2"]~"Fold Change"))+
+  theme(axis.text=element_text(size=10, colour = "black"), 
+        axis.line = element_line(colour = "black"),
+        legend.title = element_blank());p
+ggsave(plot=p, filename = 'figures/DA-Volcano-early-late.png',width = 8,height = 8)
+
+```
+
+# DA functions by week
+
+```{r}
+kegg <- read_excel('data/EMU_database.GIBBs.KO.PICRUST2.xlsx', sheet='EMU_database.GIBBs.PICRUSt2', range='B9:BE17565') %>%
+  mutate_if(is.numeric, replace_na, replace=0)
+
+d.list <- d$feature
+keggsub <- filter(kegg, Species %in% d.list)
+names(d)[names(d) == 'feature'] <- 'Species'
+d.kegg <- left_join(d,keggsub, by = 'Species') %>% 
+filter(!NSTI=='NA')
+
+d<- pivot_longer(d.kegg, cols=hcnA:nosZ, names_to = 'Gene', values_to = 'value') %>%   filter(!value==0)
+
+d$Function <- ifelse(d$Gene=="hcnA", "Biocontrol",
+                        ifelse(d$Gene=="budA","Biocontrol",
+                               ifelse(d$Gene=="budC","Biocontrol",
+                                      ifelse(d$Gene=="E3.2.1.6","Biocontrol",                                             ifelse(d$Gene=="E3.2.1.14","Biocontrol",                                                    ifelse(d$Gene=="phlD","Biocontrol",                                                       ifelse(d$Gene=="ituA","Biocontrol",  
+                      ifelse(d$Gene=="fenA", "Biocontrol",
+                        ifelse(d$Gene=="srfAA","Biocontrol",
+                               ifelse(d$Gene=="rifM","Biocontrol",
+                                      ifelse(d$Gene=="phzE","Biocontrol",
+                                             ifelse(d$Gene=="ipdC","Stress",                                                    ifelse(d$Gene=="acdS","Stress",                                                           ifelse(d$Gene=="mbtI","Siderophore",                                                    ifelse(d$Gene=="entA", "Siderophore",
+        ifelse(d$Gene=="pchB","Siderophore",
+           ifelse(d$Gene=="bglX","C decomposition",
+              ifelse(d$Gene=="bglB","C decomposition",
+                 ifelse(d$Gene=="E3.2.1.21","C decomposition",                                          ifelse(d$Gene=="amiE","N decomposition",    
+ifelse(d$Gene=="ureC","N decomposition",                                                    ifelse(d$Gene=="pqqC", "PO4 solubility",
+        ifelse(d$Gene=="phoA","P decomposition",
+           ifelse(d$Gene=="phoD","P decomposition",
+              ifelse(d$Gene=="PHO","P decomposition",
+                 ifelse(d$Gene=="appA","P decomposition",                                          ifelse(d$Gene=="phoN","P decomposition",                             ifelse(d$Gene=="aslA","S decomposition",                                                    ifelse(d$Gene=="nifH", "N-fixation",
+        ifelse(d$Gene=="nifD","N-fixation",
+           ifelse(d$Gene=="nifK","N-fixation",
+              ifelse(d$Gene=="pmoA-amoA","Nitrification",
+                 ifelse(d$Gene=="hao","Nitrification",                                          ifelse(d$Gene=="nirB","Dissimilatory nitrate reduction",    
+ifelse(d$Gene=="nirD","Dissimilatory nitrate reduction",                                   ifelse(d$Gene=="nrfA", "Dissimilatory nitrate reduction",
+        ifelse(d$Gene=="nirA","Assimilatory nitrate reduction",
+           ifelse(d$Gene=="NIT-6","Assimilatory nitrate reduction",
+              ifelse(d$Gene=="narG","Denitrification",
+                 ifelse(d$Gene=="narH","Denitrification",                                          ifelse(d$Gene=="nirK","Denitrification",    
+ ifelse(d$Gene=="nirS","Denitrification",                                   ifelse(d$Gene=="norB", "Denitrification",
+        ifelse(d$Gene=="norC","Denitrification",
+          ifelse(d$Gene=='nosZ','Denitrification',NA)))))))))))))))))))))))))))))))))))))))))))))
+
+d<-d %>% dplyr::select(Species, enrich_group, Week, ef_logFC, padj, Fert, Gene, Function)
+d<- arrange(d, ef_logFC)
+
+level_order <- factor(d$Function, levels=c("Assimilatory nitrate reduction", 
+                                           "Denitrification",
+                                           "Dissimilatory nitrate reduction",
+                                           "N-fixation",
+                                           "N decomposition",
+                                           "Nitrification",
+                                           "P decomposition",
+                                           "PO4 solubility",
+                                           "Siderophore",
+                                           "Biocontrol",
+                                           "Stress",
+                                           "S decomposition",
+                                           "C decomposition"))
+p<-ggplot(data=d)+
+  geom_point(position=position_jitter(0.9),alpha=0.9,mapping= aes(
+    fill=level_order, x=ef_logFC,y=-log(padj)),
+    size=4,color='black',pch=21) +
+  scale_fill_manual(values = c('gray90','gray50','gray20','springgreen4', 'lawngreen','darkolivegreen', 'blue','cornflowerblue','darkblue', 'red', 'firebrick','yellow2','goldenrod4'))+
+  theme_classic()+
+  facet_wrap(~Week, ncol = 2, scales='free')+
+  labs(y=expression("-log"["10"] ~ "p" ["adj"]), 
+       x=expression("log"["2"]~"Fold Change"))+
+  theme(axis.text=element_text(size=10, colour = "black"), 
+        axis.line = element_line(colour = "black"),
+        legend.title = element_blank());p
+ggsave(p, filename='figures/DA-functions-byweek.png', width=20, height=10)
 ```
 

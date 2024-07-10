@@ -17,10 +17,6 @@ library(readxl)
 library(writexl)
 library(phyloseq)
 
-packageLoad(c("knitr",'vegan','readxl','reticulate','phyloseq','MicEco', 'egg',
-              'metacoder','tidyverse','devtools', 'emmeans', 'car',
-              'RColorBrewer', 'MASS', 'dunn.test', 'SciViews','ggthemes',
-              'metacoder','gplots', 'ggrepel', 'pairwiseAdonis', 'metacoder','gplots', 'ggrepel', 'pairwiseAdonis','microbiomeMarker', 'DESeq2', 'ggplot2'))
 
 source('DManter_CustomFunctions.R')
 
@@ -59,9 +55,11 @@ P.rel <- merge_phyloseq(P.a, P.b) %>%
   subset_samples(., final > 10000)
   
 saveRDS(P.rel,'data/P.rel.RDS')
+
 P.count <- P.rel 
 for (n in 1:nsamples(P.count)) {
   otu_table(P.count)[,n] <- round(otu_table(P.count)[,n] * sample_data(P.count)$final[n], 0)
 }
+
 saveRDS(P.count, 'data/P.count.RDS')
 ```
