@@ -1,0 +1,43 @@
+---
+title: "qPCR"
+output: html_document
+date: "2024-07-10"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Run model
+
+```{r}
+P.rel <- readRDS('data/P.rel.RDS')
+d <- data.frame(sample_data(P.rel))
+mod <- lm(qPCR_FW ~ Week*Fert, data=d)
+par(mfrow=c(2,2))
+plot(mod)
+aov.mod<- aov(mod)
+summary(aov.mod)
+summary(mod)
+t<-HSD.test(mod, "Week");t
+res <- emmeans(mod, list(pairwise ~ Week*Fert), adjust = "fdr")
+res
+plot(res[[1]], horizontal=F)
+```
+
+## Graph
+
+```{r}
+
+p <- ggplot(aes(group=Fert,x=Week, y=qPCR_FW), data = d) +
+  geom_smooth(aes(fill=Fert, color=Fert))+
+  scale_fill_brewer(palette = 'Set1')+
+  scale_color_brewer(palette = 'Set1')+
+  geom_line(stat='summary',fun='mean',color='black') +
+  facet_wrap(~Fert, ncol=2)+
+  theme_classic()+
+  labs(y="Total Microbial Abundance (gene copies per g soil)")+
+  theme(legend.title = element_blank(),
+        legend.position = 'right',
+        axis.text = element_text(color='black'));p
+p<- tag_facet(p,size = 5);p #A=CK, B=ESN, C=HU, D=LU
+ggsave(plot=p, filename = 'output/MicrobialBiomass.png',width = 10,height = 6)
+```
