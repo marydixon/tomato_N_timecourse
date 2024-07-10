@@ -1,0 +1,67 @@
+---
+title: "Read-In-Data"
+author: "MD"
+date: "'r format(Sys.time(), '%b %d, %Y')'"
+output: 
+ html_document:
+   toc: true
+   toc_float: true
+ editor_options:
+   chunck_output_type: console
+   chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(phyloseq)
+
+packageLoad(c("knitr",'vegan','readxl','reticulate','phyloseq','MicEco', 'egg',
+              'metacoder','tidyverse','devtools', 'emmeans', 'car',
+              'RColorBrewer', 'MASS', 'dunn.test', 'SciViews','ggthemes',
+              'metacoder','gplots', 'ggrepel', 'pairwiseAdonis', 'metacoder','gplots', 'ggrepel', 'pairwiseAdonis','microbiomeMarker', 'DESeq2', 'ggplot2'))
+
+source('DManter_CustomFunctions.R')
+
+```
+
+```{r}
+dem.a <- read.delim('data/demultiplex_A.log', sep=',', header = TRUE) 
+met.a<-read.csv("data/qPCR_Metadata_A.csv")
+met.dem.a <- left_join(dem.a,met.a,by='sample') %>% 
+  filter(., !Week=='CK') %>% 
+  filter(.,!Week == 'BLANK')
+write_xlsx(met.dem.a, 'data/demultiplex_A.xlsx')
+
+dem.b <- read.delim('data/demultiplex_B.log', sep=',', header = TRUE)
+met.b<-read.csv("data/qPCR_Metadata_B.csv")
+met.dem.b <- left_join(dem.b,met.b,by='sample') %>% 
+  filter(., !Week=='CK') %>% 
+  filter(.,!Week == 'BLANK')
+write_xlsx(met.dem.b, 'data/demultiplex_B.xlsx')
+```
+
+```{r}
+P.a <- emu_to_phyloseq(RA_file = 'data/EMU_rel.abund_A.csv',
+                        meta_file = 'data/demultiplex_A.xlsx',
+                        sheet = 'Sheet1',range = 'A1:N81',
+                        sample_names = 'name',
+                        run_name = 'CRF')
+
+P.b <- emu_to_phyloseq(RA_file = 'data/EMU_rel.abund_B.csv',
+                        meta_file = 'data/demultiplex_B.xlsx',
+                        sheet = 'Sheet1',range = 'A1:N81',
+                        sample_names = 'name',
+                        run_name = 'CRG')
+
+P.rel <- merge_phyloseq(P.a, P.b) %>% 
+  subset_samples(., final > 10000)
+  
+saveRDS(P.rel,'data/P.rel.RDS')
+P.count <- P.rel 
+for (n in 1:nsamples(P.count)) {
+  otu_table(P.count)[,n] <- round(otu_table(P.count)[,n] * sample_data(P.count)$final[n], 0)
+}
+saveRDS(P.count, 'data/P.count.RDS')
+```
