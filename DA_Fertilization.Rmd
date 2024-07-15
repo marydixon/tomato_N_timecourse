@@ -1,0 +1,137 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-07-10"
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+P.count <- readRDS('data/P.count.RDS')
+P.sub <- subset_samples(P.count, final >= 10000)
+colnames(tax_table(P.sub)) <- c('Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species')
+
+
+
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.sub, 
+  group="Fert",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=0.05,
+  contrast=c('Control','Urea'))
+out1<-data.frame(microbiomeMarker::marker_table(out.glom)) %>% 
+  mutate(Contrast='CK-Urea')
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.sub, 
+  group="Fert",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=0.05,
+  contrast=c('Control','HUrea'))
+out2<-data.frame(microbiomeMarker::marker_table(out.glom)) %>% 
+  mutate(Contrast='CK-HUrea')
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.sub, 
+  group="Fert",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=0.05,
+  contrast=c('Control','ESN'))
+out3<-data.frame(microbiomeMarker::marker_table(out.glom)) %>% 
+  mutate(Contrast='CK-ESN')
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.sub, 
+  group="Fert",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=0.05,
+  contrast=c('Urea','HUrea'))
+out4<-data.frame(microbiomeMarker::marker_table(out.glom)) %>% 
+  mutate(Contrast='Urea-HUrea')
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.sub, 
+  group="Fert",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=0.05,
+  contrast=c('Urea','ESN'))
+ #no diff
+
+out.glom <- microbiomeMarker::run_deseq2(
+  P.sub, 
+  group="Fert",
+  taxa_rank="Species",
+  norm="RLE",
+  transform="identity",
+  p_adjust='fdr', 
+  pvalue_cutoff=0.05,
+  contrast=c('HUrea','ESN'))
+out5<-data.frame(microbiomeMarker::marker_table(out.glom)) %>% 
+  mutate(Contrast='HUrea-ESN')
+
+out <- rbind(out1,out2, out3,out4,out5)
+
+
+dflist <- out$feature
+keggsub <- filter(kegg, Species %in% dflist)
+names(out)[names(out) == 'feature'] <- 'Species'
+df.kegg <- left_join(out,keggsub, by = 'Species')
+
+d<- pivot_longer(df.kegg, cols=hcnA:nosZ, names_to = 'Gene', values_to = 'value') %>%   filter(!value==0)
+
+
+d$Function <- ifelse(d$Gene=="hcnA", "Biocontrol",
+                        ifelse(d$Gene=="budA","Biocontrol",
+                               ifelse(d$Gene=="budC","Biocontrol",
+                                      ifelse(d$Gene=="E3.2.1.6","Biocontrol",                                             ifelse(d$Gene=="E3.2.1.14","Biocontrol",                                                    ifelse(d$Gene=="phlD","Biocontrol",                                                       ifelse(d$Gene=="ituA","Biocontrol",  
+                      ifelse(d$Gene=="fenA", "Biocontrol",
+                        ifelse(d$Gene=="srfAA","Biocontrol",
+                               ifelse(d$Gene=="rifM","Biocontrol",
+                                      ifelse(d$Gene=="phzE","Biocontrol",
+                                             ifelse(d$Gene=="ipdC","Stress",                                                    ifelse(d$Gene=="acdS","Stress",                                                           ifelse(d$Gene=="mbtI","Siderophore",                                                    ifelse(d$Gene=="entA", "Siderophore",
+        ifelse(d$Gene=="pchB","Siderophore",
+           ifelse(d$Gene=="bglX","C decomposition",
+              ifelse(d$Gene=="bglB","C decomposition",
+                 ifelse(d$Gene=="E3.2.1.21","C decomposition",                                          ifelse(d$Gene=="amiE","N decomposition",    
+ifelse(d$Gene=="ureC","N decomposition",                                                    ifelse(d$Gene=="pqqC", "PO4 solubility",
+        ifelse(d$Gene=="phoA","P decomposition",
+           ifelse(d$Gene=="phoD","P decomposition",
+              ifelse(d$Gene=="PHO","P decomposition",
+                 ifelse(d$Gene=="appA","P decomposition",                                          ifelse(d$Gene=="phoN","P decomposition",                             ifelse(d$Gene=="aslA","S decomposition",                                                    ifelse(d$Gene=="nifH", "N-fixation",
+        ifelse(d$Gene=="nifD","N-fixation",
+           ifelse(d$Gene=="nifK","N-fixation",
+              ifelse(d$Gene=="pmoA-amoA","Nitrification",
+                 ifelse(d$Gene=="hao","Nitrification",                                          ifelse(d$Gene=="nirB","Dissimilatory nitrate reduction",    
+ifelse(d$Gene=="nirD","Dissimilatory nitrate reduction",                                   ifelse(d$Gene=="nrfA", "Dissimilatory nitrate reduction",
+        ifelse(d$Gene=="nirA","Assimilatory nitrate reduction",
+           ifelse(d$Gene=="NIT-6","Assimilatory nitrate reduction",
+              ifelse(d$Gene=="narG","Denitrification",
+                 ifelse(d$Gene=="narH","Denitrification",                                          ifelse(d$Gene=="nirK","Denitrification",    
+ ifelse(d$Gene=="nirS","Denitrification",                                   ifelse(d$Gene=="norB", "Denitrification",
+        ifelse(d$Gene=="norC","Denitrification",
+          ifelse(d$Gene=='nosZ','Denitrification',NA)))))))))))))))))))))))))))))))))))))))))))))
+d<-d %>% dplyr::select(Species, enrich_group, Contrast, ef_logFC, padj, Gene, Function)
+
+write.csv(dsum, '_fertilizationDA.csv')
+
+dsum <- summarize(group_by(d, Species,enrich_group,Contrast,ef_logFC,padj,Function))
+```
+
+ 

@@ -104,7 +104,7 @@ out <-data.frame(microbiomeMarker::marker_table(out.glom))%>%
   mutate(Week='6v7') %>% 
   mutate(Fert='Control')
 out$enrich_group <- gsub('X','',out$enrich_group)
-write.csv(out, 'data/DA.files/DA_CK_6v7.csv', row.names = FALSE)
+
 
 #weeks 7v8
 out.glom <- microbiomeMarker::run_deseq2(
@@ -265,7 +265,7 @@ out <-data.frame(microbiomeMarker::marker_table(out.glom))%>%
   mutate(Week='6v7') %>% 
   mutate(Fert='High_Urea')
 out$enrich_group <- gsub('X','',out$enrich_group)
-write.csv(out, 'data/DA.files/DA_HU_6v7.csv', row.names = FALSE)
+
 
 #weeks 7v8
 out.glom <- microbiomeMarker::run_deseq2(
@@ -366,7 +366,7 @@ d <- list.files(path="data/DA.files", full.names = TRUE) %>%
   lapply(read_csv) %>% 
   bind_rows 
 d$enrich_group = as.factor(d$enrich_group)
-write.csv(d, 'data/DA.files/DA_all.csv')
+write.csv(d, 'data/DA_all.csv')
 
 ```
 
@@ -416,7 +416,7 @@ out.glom <- microbiomeMarker::run_deseq2(
   pvalue_cutoff=1)
 
 df<-data.frame(microbiomeMarker::marker_table(out.glom))
-write.csv(df,"data/DA.files/DA_early-late.csv")
+write.csv(df,"data/DA_early-late.csv")
 
 
 df$sig <- ifelse(df$padj>0.05, "NS",
@@ -491,7 +491,7 @@ ifelse(d$Gene=="nirD","Dissimilatory nitrate reduction",                        
           ifelse(d$Gene=='nosZ','Denitrification',NA)))))))))))))))))))))))))))))))))))))))))))))
 
 d<-d %>% dplyr::select(Species, enrich_group, Week, ef_logFC, padj, Fert, Gene, Function)
-d<- arrange(d, ef_logFC)
+d<- arrange(d, Function)
 
 level_order <- factor(d$Function, levels=c("Assimilatory nitrate reduction", 
                                            "Denitrification",

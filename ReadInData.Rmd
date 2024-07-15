@@ -40,13 +40,13 @@ write_xlsx(met.dem.b, 'data/demultiplex_B.xlsx')
 
 ```{r}
 P.a <- emu_to_phyloseq(RA_file = 'data/EMU_rel.abund_A.csv',
-                        meta_file = 'data/demultiplex_A.xlsx',
-                        sheet = 'Sheet1',range = 'A1:N81',
+                        meta_file = 'data/Carley_F_clean.xls',
+                        sheet = 'Carley_F_clean',range = 'A1:N81',
                         sample_names = 'name',
                         run_name = 'CRF')
 
 P.b <- emu_to_phyloseq(RA_file = 'data/EMU_rel.abund_B.csv',
-                        meta_file = 'data/demultiplex_B.xlsx',
+                        meta_file = 'data/Carley_G_clean.xlsx',
                         sheet = 'Sheet1',range = 'A1:N81',
                         sample_names = 'name',
                         run_name = 'CRG')
