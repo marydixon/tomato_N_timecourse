@@ -342,7 +342,7 @@ out.glom <- microbiomeMarker::run_deseq2(
   p_adjust='fdr', pvalue_cutoff=0.05,
   contrast=c('6','7'))
 out <-data.frame(microbiomeMarker::marker_table(out.glom))%>% 
-  mutate(Week='6v7') %>% 
+  mutate(Week=' 6v7') %>% 
   mutate(Fert='ESN')
 out$enrich_group <- gsub('X','',out$enrich_group)
 write.csv(out, 'data/DA.files/DA_ESN_6v7.csv', row.names = FALSE)
