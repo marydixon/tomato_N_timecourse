@@ -16,6 +16,8 @@ library(microbiomeMarker)
 library(tidyverse)
 library(readr)
 library(egg)
+library(phyloseq)
+library(readxl)
 ```
 
 
@@ -367,7 +369,6 @@ d <- list.files(path="data/DA.files", full.names = TRUE) %>%
   bind_rows 
 d$enrich_group = as.factor(d$enrich_group)
 write.csv(d, 'data/DA_all.csv')
-
 ```
 
 ## diff abund figure by week
