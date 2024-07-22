@@ -1,16 +1,26 @@
 ---
 title: "qPCR"
-output: html_document
-date: "2024-07-10"
-editor_options: 
-  chunk_output_type: console
+author: "MD"
+date: "'r format(Sys.time(), '%b %d, %Y')'"
+output: 
+ html_document:
+   toc: true
+   toc_float: true
+ editor_options:
+   chunck_output_type: console
+   chunk_output_type: console
 ---
 
-## Run model
+```{r}
+library(emmeans)
+library(agricolae)
+```
+
 
 ```{r}
 P.rel <- readRDS('data/P.rel.RDS')
 d <- data.frame(sample_data(P.rel))
+#d <- read.csv('data/qpcr.csv')
 mod <- lm(qPCR_FW ~ Week*Fert, data=d)
 par(mfrow=c(2,2))
 plot(mod)
@@ -39,5 +49,60 @@ p <- ggplot(aes(group=Fert,x=Week, y=qPCR_FW), data = d) +
         legend.position = 'right',
         axis.text = element_text(color='black'));p
 p<- tag_facet(p,size = 5);p #A=CK, B=ESN, C=HU, D=LU
-ggsave(plot=p, filename = 'output/MicrobialBiomass.png',width = 10,height = 6)
+ggsave(plot=p, filename = 'figures/MicrobialBiomass.png',width = 10,height = 6)
 ```
+
+```{r}
+P.rel <- readRDS('data/P.rel.RDS')
+
+taxa <- c('Nitrosospira briensis', 'Nitrosospira multiformis','Nitrosomonas communis', 'Nitrobacter hamburgensis', 'Nitrobacter winogradskyi', 'Devosia ginsengisoli', 'Oscillatoria nigro-viridis', 'Microcoleus sp. PCC 7113' ,'Oligotropha carboxidovorans', 'Ancylothrix terrestris')
+
+P.sub <- subset_taxa(P.rel, species %in% taxa)
+
+P.glom <- tax_glom(P.sub, taxrank="species")
+P.glom <- prune_taxa(taxa_sums(P.glom) > 0.0000, P.glom)
+
+d <- psmelt(P.glom) %>% 
+  filter(.,Abundance!=0)
+
+
+mod <- lm(log(Abundance)~ Stage*species, data =d)
+par(mfrow=c(2,2))
+plot(mod)
+
+aov.mod <- aov(mod)
+summary(aov.mod)
+#                     Df Sum Sq Mean Sq F value   Pr(>F)    
+# Stage                1   61.4   61.36  75.559  < 2e-16 ***
+# Fert                 3    1.1    0.38   0.467  0.70536    
+# species              9  471.7   52.41  64.535  < 2e-16 ***
+# Stage:Fert           3    2.7    0.90   1.107  0.34569    
+# Stage:species        9   19.3    2.15   2.645  0.00521 ** 
+# Fert:species        25   86.7    3.47   4.269 6.08e-11 ***
+# Stage:Fert:species  23   41.0    1.78   2.195  0.00114 ** 
+
+t <- HSD.test(mod, "Stage");t
+
+dsum <- summarise(group_by(d,Stage,species),
+                  n=n(),
+                  mean=mean(Abundance),
+                  sd=sd(Abundance),
+                  se=sd/sqrt(n)) %>% 
+  filter(.,!is.na(sd))
+
+res <- emmeans(mod, list(pairwise ~ Stage*species), adjust = "fdr")
+res
+plot(res[[1]], horizontal=T)
+groups <- data.frame(multcomp::cld(res[[1]], adjust='fdr', Letters=c("abcdefghijklmnopqrstuvwxy"), decreasing=F))
+
+p<-ggplot(d)+
+  geom_boxplot(position='dodge', aes(x=species,y=log(Abundance),fill=Stage))+
+  coord_flip()+
+  scale_fill_brewer(palette = 'Paired')+
+  theme_classic()+
+  labs(y='Log-transformed Relative Abundance')+
+  theme(axis.title.y = element_blank());p
+ggsave(plot=p, 'figures/intermediate/DA-RelAbund_earlylate.png', width = 6, height=6)
+```
+
+
