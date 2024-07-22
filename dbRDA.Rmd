@@ -15,7 +15,8 @@ output:
 library(vegan)
 library(pairwiseAdonis)
 library(RColorBrewer)
-
+library(phyloseq)
+library(tidyverse)
 ```
 # Read in data
 
@@ -39,13 +40,7 @@ pair.mod<-pairwise.adonis(dist,factors=d$Week, p.adjust.m = "fdr")
 pa<-pair.mod %>% filter(.,p.adjusted<0.05)
 
 adonis2(dist ~  Week*Fert, data=d, perm=999)
-# adonis2(formula = dist ~ Week * Fert, data = d, permutations = 999)
-#            Df SumOfSqs      R2       F Pr(>F)    
-# Week        1   1.1252 0.16257 27.6804  0.001 ***
-# Fert        3   0.1604 0.02318  1.3154  0.120    
-# Week:Fert   3   0.1072 0.01548  0.8787  0.611    
-# Residual  136   5.5286 0.79877                   
-# Total     143   6.9214 1.00000   
+
 pairwise.adonis(dist,factors=d$Week, p.adjust.m = "fdr")
 
 ```
@@ -76,7 +71,7 @@ p<-ggplot(data=axes, aes(x=Axis1, y=Axis2, fill=Week, shape=Fert)) +
        y=paste0('CAP2 (', Axis2_exp, '%)'),
        alpha='none') +
   theme_classic();p
-#ggsave(plot=p, filename = 'output/Fig3dbRDA.png',width = 12,height = 6)
+#ggsave(plot=p, filename = 'output/dbRDA.png',width = 12,height = 6)
 ```
 
 ## Biplot
@@ -93,15 +88,6 @@ dist <- vegdist(data, method='bray')
 
 
 ```{r}
-# run PCoA for different treatment groups
-#ord <- capscale(dist ~ Fert * Rate * Soil, data=d)
-# 
-# mod0 <- capscale(dist ~ 1, data=d)
-# mod1 <- capscale(dist ~ Fert*Week, data=d)
-# mod <- ordistep(mod0, scope=formula(mod1), direction='both')
-# mod
-# mod$anova
-
 ord <- capscale(dist ~ Week*Fert, data=d)
 
 sppscores(ord) <- data
@@ -110,12 +96,12 @@ biplot <- biplot[abs(biplot$CAP1) > 0.3 | abs(biplot$CAP2) > 0.3, ]
 
 adonis2(dist ~ Fert*Week, data=d, perm=999, by="terms")
 
-### get eigenvalues and proportion explained
+
 ev <- eigenvals(ord)
 Axis1_exp = round(ev[1] / sum(ev) * 100, 1)
 Axis2_exp = round(ev[2] / sum(ev) * 100, 1)
 
-### get PC axes
+
 axes <- as.data.frame(vegan::scores(ord, display="sites", choices=c(1:2)))
 names(axes) <- c("Axis1", "Axis2")
 axes <- cbind(d, axes) 
@@ -128,7 +114,7 @@ axes$Week <- as.factor(axes$Week)
 
 # Fig 1 Complete Data set
 
-```{r pcoa fig 1A non facet, fig.width=11, fig.height=6, fig.cap="PCoA fig 1A, Complete Data Set. Using species and Bray-Curtis distance."}
+```{r biplot fig}
 biplot$letters <- c('B',"C","A")
 
 p<-ggplot(data=axes, aes(x=Axis1, y=Axis2, fill=Week, shape=Fert)) +
@@ -146,14 +132,10 @@ p<-ggplot(data=axes, aes(x=Axis1, y=Axis2, fill=Week, shape=Fert)) +
     x=CAP1, y=0.2+CAP2, label=letters, 
     family = 'mono', fontface = 'bold.italic'))+
      theme_classic();p
-  # geom_text(label="A",size=6, x=1,y=2.5,aes(family = 'mono', fontface = 'bold.italic'))+
-  # geom_text(label="B",size=6, x=1,y=2.2,aes(family = 'mono', fontface = 'bold.italic'))+
-  # geom_text(label="C",size=6, x=1,y=1.9,aes(family = 'mono', fontface = 'bold.italic'))+
-  # geom_text(label="D",size=6, x=1,y=1.6,aes(family = 'mono', fontface = 'bold.italic'))+
-  # geom_text(label="E",size=6, x=1,y=1.3,aes(family = 'mono', fontface = 'bold.italic'))
+
 
 ggsave(plot=p, filename = 'figures/rdabiplot.png',width = 10,height = 10)
-#label=row.names(biplot)
+
 ```
 
 # Unconstrained pcoa
