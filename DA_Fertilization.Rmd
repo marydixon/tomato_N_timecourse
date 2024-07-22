@@ -100,6 +100,10 @@ out <- rbind(out1,out2, out3,out4,out5)
 
 
 dflist <- out$feature
+
+kegg <- read_excel('data/EMU_database.GIBBs.KO.PICRUST2.xlsx', sheet='EMU_database.GIBBs.PICRUSt2', range='B9:BE17565') %>%
+  mutate_if(is.numeric, replace_na, replace=0)
+
 keggsub <- filter(kegg, Species %in% dflist)
 names(out)[names(out) == 'feature'] <- 'Species'
 df.kegg <- left_join(out,keggsub, by = 'Species')
