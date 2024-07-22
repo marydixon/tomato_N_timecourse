@@ -1,4 +1,4 @@
-# tomato_N_timcourse
+# tomato_N_timecourse
 
 
 ## Overview
