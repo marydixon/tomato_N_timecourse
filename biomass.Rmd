@@ -13,7 +13,6 @@ editor_options:
 
 ```{r, include=FALSE}
 library(tidyverse)
-library(egg)
 library(RColorBrewer)
 library(car)
 library(emmeans)

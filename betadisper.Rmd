@@ -12,37 +12,17 @@ editor_options:
 
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE)
-knitr::opts_chunk$set(echo = FALSE)
-knitr::opts_chunk$set(message = FALSE)
 library(tidyverse)
-library(egg)
-library(ggthemes)
-library(SciViews)
-library(dunn.test)
-library(MASS)
 library(RColorBrewer)
 library(car)
 library(emmeans)
-library(multcomp)
-library(multcompView)
-library(devtools)
-library(dplyr)
-library(ggplot2)
-library(metacoder)
-library(MicEco)
-library(phyloseq)
-library(reticulate)
-library(readxl)
-library(vegan)
-library(knitr)
 library(agricolae)
+library(vegan)
 ```
 
 # Read in Data
 
 ```{r, echo=FALSE}
-source("myFunctions.R")
 P.rel <- readRDS('data/P.rel.RDS')
 
 ```
@@ -50,7 +30,7 @@ P.rel <- readRDS('data/P.rel.RDS')
 ```{r run model}
 d <- data.frame(sample_data(P.rel))
 data <- data.frame(t(otu_table(P.rel)))
-data <- decostand(data, method='hellinger') # using hellinger's transformation
+data <- decostand(data, method='hellinger') 
 dist <- vegdist(data, method='bray')
 
 
@@ -81,6 +61,7 @@ print(mod, digits = max(3, getOption("digits") - 3),
 x <- rep(c(1,2,3,4,5,6,7,8),each=20)
 df <- as.data.frame(mod$distances)
 df$name <- rownames(df)
+write.csv(df,'data/betadisper.csv')
 ```
 
 ## Model
@@ -116,26 +97,11 @@ p <- ggplot() +
         axis.title=element_text(face="bold"),
         legend.title = element_blank(),
         axis.line = element_line(colour = "black"))+
-  # geom_text(label='AB', x=1,y=-1.2, size = 5) +
-  # geom_text(label='AB', x=2,y=-1.1, size = 5) +
-  # geom_text(label='A', x=3,y=-1.1, size = 5) +
-  # geom_text(label='AB', x=4,y=-0.7, size = 5) +
-  # geom_text(label='BC', x=5,y=-1.1, size = 5) +
-  # geom_text(label='CD', x=6,y=-1.6, size = 5) +
-  # geom_text(label='CD', x=7,y=-1.4, size = 5) +
-  # geom_text(label='D', x=8,y=-1.6, size = 5)+
-  # geom_segment(aes(x = 0.65, y = -1.23, xend = 1.36, yend = -1.23), lwd=0.4)+
-  # geom_segment(aes(x = 1.65, y = -1.13, xend = 2.36, yend = -1.13), lwd=0.4)+
-  # geom_segment(aes(x = 2.65, y = -1.13, xend = 3.36, yend = -1.13), lwd=0.4)+
-  # geom_segment(aes(x = 3.65, y = -0.73, xend = 4.36, yend = -0.73), lwd=0.4)+
-  # geom_segment(aes(x = 4.65, y = -1.13, xend = 5.36, yend = -1.13), lwd=0.4)+
-  # geom_segment(aes(x = 5.65, y = -1.63, xend = 6.36, yend = -1.63), lwd=0.4)+
-  # geom_segment(aes(x = 6.65, y = -1.43, xend = 7.36, yend = -1.43), lwd=0.4)+
-  # geom_segment(aes(x = 7.65, y = -1.63, xend = 8.36, yend = -1.63), lwd=0.4)+
+
   geom_text(data=groups,stat='identity',
             aes(x=week, y=emmean+SE, label=.group), 
             size=4,position=position_dodge(.9));p
-ggsave(plot=p, filename = 'output/Fig5betadisper.png',width = 10,height = 6);p
+ggsave(plot=p, filename = 'output/betadisper.png',width = 10,height = 6);p
 
 ```
 
