@@ -1,0 +1,151 @@
+---
+title: "Biomass"
+author: "MD"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+ html_document:
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r, include=FALSE}
+library(tidyverse)
+library(egg)
+library(RColorBrewer)
+library(car)
+library(emmeans)
+library(agricolae)
+```
+
+# Read in Data
+
+```{r, echo=FALSE}
+df <- read.csv('data/weeklybiomass.csv') %>% 
+  dplyr::select(,1:7) 
+
+df$Week <- as.factor(df$Week)
+mod <- lm(data=df, log(SHOOT) ~ Fert*Week)
+par(mfrow=c(2,2))
+plot(mod)
+aov.mod<- aov(mod)
+summary(aov.mod)
+t<-HSD.test(mod, "Week");t
+res <- emmeans(mod, list(pairwise ~ Week*Fert), adjust = "fdr")
+res
+plot(res[[1]], horizontal=F)
+groups <- data.frame(multcomp::cld(res[[1]], adjust='fdr', Letters=c("abcdefghijklmnopqrstuvwxy"), decreasing=T))
+groups <- groups %>%
+  arrange(Fert)
+
+
+groups$letters <- gsub(' ','',groups$.group)
+```
+
+## Boxplot
+
+```{r warning=F}
+p <- ggplot() +
+   geom_boxplot(data=df, aes(x=Week, y = log(SHOOT), fill=Fert))+
+ geom_text(data=groups,position = position_dodge(0.9),
+            aes(group=interaction(Week,Fert),label=letters,x=Week,y=emmean+(SE+2.5)))+
+  labs(y="Log-Transformed Dry Shoot Biomass (g)", x="Week")+
+  theme_classic()+
+  scale_fill_manual(values = c('#1F78B4', '#33A02C', '#E31A1C', '#FF7F00'),
+                    labels=c('Control', 'ESN', 'High Urea', 'Low Urea')) +
+  theme(axis.text.x=element_text(colour = "black"), 
+        axis.text.y=element_text(colour = "black"),
+        axis.title=element_text(face="bold"),
+        legend.title = element_blank(),
+        axis.line = element_line(colour = "black"))+
+  geom_text(aes(label='F', x=1, y=-2.3,size=4))+
+  geom_text(aes(label='E', x=2, y=0.1,size=4))+
+  geom_text(aes(label='D', x=3, y=1.2,size=4))+
+  geom_text(aes(label='C', x=4, y=2.7,size=4))+
+  geom_text(aes(label='B', x=5, y=3.2,size=4))+
+  geom_text(aes(label='B', x=6, y=3.6,size=4))+
+  geom_text(aes(label='AB', x=7, y=3.7,size=4))+
+  geom_text(aes(label='A', x=8, y=3.9,size=4))+
+  guides(size=F)+
+  geom_segment(aes(x=0.6,xend=1.4, y= -2.5, yend=-2.5),lwd=0.5)+
+  geom_segment(aes(x=1.6,xend=2.4, y= -0.1, yend=-0.1),lwd=0.5)+
+  geom_segment(aes(x=2.6,xend=3.4, y= 1, yend=1),lwd=0.5)+
+  geom_segment(aes(x=3.6,xend=4.4, y= 2.5, yend=2.5),lwd=0.5)+
+  geom_segment(aes(x=4.6,xend=5.4, y= 3, yend=3),lwd=0.5)+
+  geom_segment(aes(x=5.6,xend=6.4, y= 3.4, yend=3.4),lwd=0.5)+
+  geom_segment(aes(x=6.6,xend=7.4, y= 3.5, yend=3.5),lwd=0.5)+
+  geom_segment(aes(x=7.6,xend=8.4, y= 3.7, yend=3.7),lwd=0.5);p
+
+ggsave(plot=p, filename = 'output/BiomassShoot.png',width = 12,height = 6);p
+
+```
+
+
+```{r, echo=FALSE}
+
+mod <- lm(data=df, log(ROOT) ~ Fert*Week)
+par(mfrow=c(2,2))
+plot(mod)
+aov.mod<- aov(mod)
+summary(aov.mod)
+t<-HSD.test(mod, "Week");t
+res <- emmeans(mod, list(pairwise ~ Week*Fert), adjust = "fdr")
+res
+plot(res[[1]], horizontal=F)
+groups <- data.frame(multcomp::cld(res[[1]], adjust='fdr', Letters=c("abcdefghijklmnopqrstuvwxy"), decreasing=T))
+groups <- groups %>%
+  arrange(Fert)
+
+
+groups$letters <- gsub(' ','',groups$.group)
+```
+
+## Boxplot
+
+```{r warning=F}
+p1 <- ggplot() +
+   geom_boxplot(data=df, aes(x=Week, y = log(ROOT), fill=Fert))+
+ geom_text(data=groups,position = position_dodge(0.9),
+            aes(group=interaction(Week,Fert),label=letters,x=Week,y=emmean+(SE+0.85)))+
+  labs(y="Log-Transformed Dry Root Biomass (g)", x="Week")+
+  theme_classic()+
+ # coord_cartesian(ylim = c(-5,5))+
+  scale_fill_manual(values = c('#1F78B4', '#33A02C', '#E31A1C', '#FF7F00'),
+                    labels=c('Control', 'ESN', 'High Urea', 'Low Urea')) +
+  theme(axis.text.x=element_text(colour = "black"), 
+        axis.text.y=element_text(colour = "black"),
+        axis.title=element_text(face="bold"),
+        legend.title = element_blank(),
+        axis.line = element_line(colour = "black"))+
+  geom_text(aes(label='G', x=1, y=-3.4,size=4))+
+  geom_text(aes(label='F', x=2, y=-1.3,size=4))+
+  geom_text(aes(label='E', x=3, y=-0.3,size=4))+
+  geom_text(aes(label='D', x=4, y=1.2,size=4))+
+  geom_text(aes(label='C', x=5, y=2.2,size=4))+
+  geom_text(aes(label='B', x=6, y=2.7,size=4))+
+  geom_text(aes(label='B', x=7, y=2.8,size=4))+
+  geom_text(aes(label='A', x=8, y=2.9,size=4))+
+  guides(size=F)+
+  geom_segment(aes(x=0.6,xend=1.4, y= -3.6, yend=-3.6),lwd=0.5)+
+  geom_segment(aes(x=1.6,xend=2.4, y= -1.5, yend=-1.5),lwd=0.5)+
+  geom_segment(aes(x=2.6,xend=3.4, y= -0.5, yend=-0.5),lwd=0.5)+
+  geom_segment(aes(x=3.6,xend=4.4, y= 1, yend=1),lwd=0.5)+
+  geom_segment(aes(x=4.6,xend=5.4, y= 2, yend=2),lwd=0.5)+
+  geom_segment(aes(x=5.6,xend=6.4, y= 2.5, yend=2.5),lwd=0.5)+
+  geom_segment(aes(x=6.6,xend=7.4, y= 2.6, yend=2.6),lwd=0.5)+
+  geom_segment(aes(x=7.6,xend=8.4, y= 2.7, yend=2.7),lwd=0.5);p1
+
+ggsave(plot=p1, filename = 'output/BiomassRoot.png',width = 10,height = 6)
+
+```
+
+```{r}
+library(patchwork)
+p2<- p/p1+
+   plot_layout(guides = "collect") & theme(legend.position = 'bottom');p2
+ggsave(plot=p2, filename = 'output/Biomass.png',width = 10,height = 10)
+
+```
+
