@@ -1,6 +1,6 @@
 ---
 title: "Read-In-Data"
-author: "MD"
+author: "MD,DM"
 date: "'r format(Sys.time(), '%b %d, %Y')'"
 output: 
  html_document:
@@ -22,21 +22,6 @@ source('DManter_CustomFunctions.R')
 
 ```
 
-```{r}
-dem.a <- read.delim('data/demultiplex_A.log', sep=',', header = TRUE) 
-met.a<-read.csv("data/qPCR_Metadata_A.csv")
-met.dem.a <- left_join(dem.a,met.a,by='sample') %>% 
-  filter(., !Week=='CK') %>% 
-  filter(.,!Week == 'BLANK')
-write_xlsx(met.dem.a, 'data/demultiplex_A.xlsx')
-
-dem.b <- read.delim('data/demultiplex_B.log', sep=',', header = TRUE)
-met.b<-read.csv("data/qPCR_Metadata_B.csv")
-met.dem.b <- left_join(dem.b,met.b,by='sample') %>% 
-  filter(., !Week=='CK') %>% 
-  filter(.,!Week == 'BLANK')
-write_xlsx(met.dem.b, 'data/demultiplex_B.xlsx')
-```
 
 ```{r}
 P.a <- emu_to_phyloseq(RA_file = 'data/EMU_rel.abund_A.csv',
